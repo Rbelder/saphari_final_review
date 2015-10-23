@@ -71,3 +71,5 @@ Use ```beastypy``` to verify that we can move the arm around:
 Use the command-line tools to check that we can command the gripper:
 * ```rostopic pub -r 10 /gripper/position_goal iai_wsg_50_msgs/PositionCmd '{pos: 90, speed: 20.0, force: 10.0}'```
 * ```rostopic pub -r 10 /gripper/position_goal iai_wsg_50_msgs/PositionCmd '{pos: 10, speed: 20.0, force: 10.0}'```
+
+### INSTRUMENT REQUIREMENTS MANAGER
