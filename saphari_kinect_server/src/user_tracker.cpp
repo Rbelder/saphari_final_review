@@ -10,7 +10,7 @@ userTracker::userTracker(ros::NodeHandle &node):n(node) {
     g_strPose[0] = 0x0;
     //depthMD_cb.ReAdjust(640,480);
 
-    //userIDpub = n.advertise<std_msgs::Int32>("/kinect_traker/closer_user_id", 2);
+    userIDpub = n.advertise<std_msgs::Int32>("/kinect_traker/active_user_id", 2);
     tf_pub_ = n.advertise<tf::tfMessage>("/tf", 2);
     humansPub = n.advertise<saphari_msgs::Humans>("/kinect_traker/user_state",2);
 
@@ -18,7 +18,7 @@ userTracker::userTracker(ros::NodeHandle &node):n(node) {
     // tf
     if(n.getParam("pub_tf_human", publishTf)) {
         if(!n.getParam("tf_frame", tfRefFrame)) {
-            tfRefFrame = "/camera_depth_frame";
+            tfRefFrame = "/openni_depth_frame";
         }
     }
     else {
@@ -38,7 +38,23 @@ userTracker::userTracker(ros::NodeHandle &node):n(node) {
         calibration = ros::package::getPath("saphari_kinect_server") + "calibration.txt";
     }
 
-    loadTfTransformFromFile(calibration, cameraToRobot);
+    // loadTfTransformFromFile(calibration, cameraToRobot);
+    // Read kinect robot transform
+    tf::TransformListener listener;
+    bool transformFound = false;
+    while(!transformFound && ros::ok()){
+        tf::StampedTransform tmp_;
+        try{
+            listener.lookupTransform(humStateRefFrame, tfRefFrame, ros::Time(0), tmp_);
+            cameraToRobot.setOrigin(tmp_.getOrigin());
+            cameraToRobot.setBasis(tmp_.getBasis());
+            transformFound = true;
+         }
+         catch (tf::TransformException ex){
+           ROS_WARN("%s",ex.what());
+           ros::Duration(1.0).sleep();
+         }
+    }
 
     emptyHm.header.frame_id = humStateRefFrame;
     emptyHm.header.seq      = 0;
@@ -153,13 +169,20 @@ void userTracker::publishTransform(XnUserID const& user,
 {
     //static tf::TransformBroadcaster br;
 
-    XnSkeletonJointPosition joint_position;
-    g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(user, joint, joint_position);
+    //XnSkeletonJointPosition joint_position;
+    //g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(user, joint, joint_position);
+
+    XnSkeletonJointTransformation joint_position;
+    g_UserGenerator.GetSkeletonCap().GetSkeletonJoint(user, joint, joint_position);
     
     // Put x = -x seems to be the reason for left and right exchange
-    double x = joint_position.position.X / 1000.0;
-    double y = joint_position.position.Y / 1000.0;
-    double z = joint_position.position.Z / 1000.0;
+   // double x = joint_position.position.X / 1000.0;
+    //double y = -joint_position.position.Y / 1000.0;
+    //double z = joint_position.position.Z / 1000.0;
+
+    double x = joint_position.position.position.X / 1000.0;
+    double y = joint_position.position.position.Y / 1000.0;
+    double z = joint_position.position.position.Z / 1000.0;
 
     XnSkeletonJointOrientation joint_orientation;
     g_UserGenerator.GetSkeletonCap().GetSkeletonJointOrientation(user, joint, joint_orientation);
@@ -170,22 +193,23 @@ void userTracker::publishTransform(XnUserID const& user,
                          m[3], m[4], m[5],
                          m[6], m[7], m[8]);
 
-    tf::Transform tempTransf(rotation);
-
     //double qx, qy, qz, qw;
 
     tf::Transform transform;
     transform.setOrigin(tf::Vector3(x, y, z));
     // Put qy, qz = -qy, -qz seems to be the reason for left and right exchange
-    transform.setRotation(tf::Quaternion(tempTransf.getRotation()));
+    transform.setBasis(rotation);
+
     // #4994
     tf::Transform change_frame;
     change_frame.setOrigin(tf::Vector3(0., 0., 0.));
     tf::Quaternion frame_rotation;
-    frame_rotation.setEulerZYX(1.5708, 0., 1.5708);
+    //frame_rotation.setEulerZYX(1.5708, 0., 1.5708);
+    frame_rotation.setEulerZYX(2*1.5708, 0., 0.);
     change_frame.setRotation(frame_rotation);
 
-    transform = cameraToRobot * change_frame * transform;
+    //transform = change_frame * transform * cameraToRobot;
+    transform = change_frame * transform;
 
     /*frame_rotation.setEulerZYX(0.0, 0.0, 0.);
     tf::Transform tmp_;
@@ -211,7 +235,7 @@ void userTracker::publishTransform(XnUserID const& user,
 
 
 void userTracker::publishTransforms(std::string const& frame_id) {
-    //XnUserID user = getClosestUser();
+    XnUserID closestUserId = getClosestUser();
     // sleep(2);
 
     XnUserID users[MAX_USERS];
@@ -267,7 +291,7 @@ void userTracker::publishTransforms(std::string const& frame_id) {
             publishTransform(user, XN_SKEL_RIGHT_ANKLE, frame_id, "kinect/right_ankle_" + strNum, 18);
             publishTransform(user, XN_SKEL_RIGHT_FOOT, frame_id, "kinect/right_foot_" + strNum, 19);
 
-            if(publishTf) {
+            if(publishTf && user==closestUserId) {
                 tf_pub_.publish(tf_msg_);
             }
 
