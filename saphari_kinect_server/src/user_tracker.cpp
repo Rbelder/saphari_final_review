@@ -181,7 +181,7 @@ void userTracker::publishTransform(XnUserID const& user,
     //double z = joint_position.position.Z / 1000.0;
 
     double x = joint_position.position.position.X / 1000.0;
-    double y = joint_position.position.position.Y / 1000.0;
+    double y = -joint_position.position.position.Y / 1000.0;
     double z = joint_position.position.position.Z / 1000.0;
 
     XnSkeletonJointOrientation joint_orientation;
@@ -199,24 +199,6 @@ void userTracker::publishTransform(XnUserID const& user,
     transform.setOrigin(tf::Vector3(x, y, z));
     // Put qy, qz = -qy, -qz seems to be the reason for left and right exchange
     transform.setBasis(rotation);
-
-    // #4994
-    tf::Transform change_frame;
-    change_frame.setOrigin(tf::Vector3(0., 0., 0.));
-    tf::Quaternion frame_rotation;
-    //frame_rotation.setEulerZYX(1.5708, 0., 1.5708);
-    frame_rotation.setEulerZYX(2*1.5708, 0., 0.);
-    change_frame.setRotation(frame_rotation);
-
-    //transform = change_frame * transform * cameraToRobot;
-    transform = change_frame * transform;
-
-    /*frame_rotation.setEulerZYX(0.0, 0.0, 0.);
-    tf::Transform tmp_;
-    tmp_.setOrigin(tf::Vector3(0.0,0.0,0.0));
-    tmp_.setRotation(frame_rotation);
-
-    transform =  tmp_ * transform;*/
 
     geometry_msgs::TransformStamped tmp_trans;
     tmp_trans.child_frame_id = child_frame_id;
@@ -271,25 +253,25 @@ void userTracker::publishTransforms(std::string const& frame_id) {
             publishTransform(user, XN_SKEL_TORSO, frame_id, "kinect/torso_" + strNum, 2);
             publishTransform(user, XN_SKEL_WAIST, frame_id, "kinect/waist_" + strNum, 3);
 
-            publishTransform(user, XN_SKEL_LEFT_SHOULDER, frame_id, "kinect/left_shoulder_" + strNum, 4);
-            publishTransform(user, XN_SKEL_LEFT_ELBOW,    frame_id, "kinect/left_elbow_" + strNum, 5);
-            publishTransform(user, XN_SKEL_LEFT_WRIST,    frame_id, "kinect/left_wrist_" + strNum, 6);
-            publishTransform(user, XN_SKEL_LEFT_HAND,     frame_id, "kinect/left_hand_" + strNum, 7);
+            publishTransform(user, XN_SKEL_LEFT_SHOULDER, frame_id, "kinect/right_shoulder_" + strNum, 4);
+            publishTransform(user, XN_SKEL_LEFT_ELBOW,    frame_id, "kinect/right_elbow_" + strNum, 5);
+            publishTransform(user, XN_SKEL_LEFT_WRIST,    frame_id, "kinect/right_wrist_" + strNum, 6);
+            publishTransform(user, XN_SKEL_LEFT_HAND,     frame_id, "kinect/right_hand_" + strNum, 7);
 
-            publishTransform(user, XN_SKEL_RIGHT_SHOULDER, frame_id, "kinect/right_shoulder_" + strNum, 8);
-            publishTransform(user, XN_SKEL_RIGHT_ELBOW,    frame_id, "kinect/right_elbow_" + strNum, 9);
-            publishTransform(user, XN_SKEL_RIGHT_WRIST,    frame_id, "kinect/right_wrist_" + strNum, 10);
-            publishTransform(user, XN_SKEL_RIGHT_HAND,     frame_id, "kinect/right_hand_" + strNum, 11);
+            publishTransform(user, XN_SKEL_RIGHT_SHOULDER, frame_id, "kinect/left_shoulder_" + strNum, 8);
+            publishTransform(user, XN_SKEL_RIGHT_ELBOW,    frame_id, "kinect/left_elbow_" + strNum, 9);
+            publishTransform(user, XN_SKEL_RIGHT_WRIST,    frame_id, "kinect/left_wrist_" + strNum, 10);
+            publishTransform(user, XN_SKEL_RIGHT_HAND,     frame_id, "kinect/left_hand_" + strNum, 11);
 
-            publishTransform(user, XN_SKEL_LEFT_HIP,  frame_id, "kinect/left_hip_" + strNum, 12);
-            publishTransform(user, XN_SKEL_LEFT_KNEE, frame_id, "kinect/left_knee_" + strNum, 13);
-            publishTransform(user, XN_SKEL_LEFT_ANKLE, frame_id, "kinect/left_ankle_" + strNum, 14);
-            publishTransform(user, XN_SKEL_LEFT_FOOT, frame_id, "kinect/left_foot_" + strNum, 15);
+            publishTransform(user, XN_SKEL_LEFT_HIP,  frame_id, "kinect/right_hip_" + strNum, 12);
+            publishTransform(user, XN_SKEL_LEFT_KNEE, frame_id, "kinect/right_knee_" + strNum, 13);
+            publishTransform(user, XN_SKEL_LEFT_ANKLE, frame_id, "kinect/right_ankle_" + strNum, 14);
+            publishTransform(user, XN_SKEL_LEFT_FOOT, frame_id, "kinect/right_foot_" + strNum, 15);
 
-            publishTransform(user, XN_SKEL_RIGHT_HIP,  frame_id, "kinect/right_hip_" + strNum, 16);
-            publishTransform(user, XN_SKEL_RIGHT_KNEE, frame_id, "kinect/right_knee_" + strNum, 17);
-            publishTransform(user, XN_SKEL_RIGHT_ANKLE, frame_id, "kinect/right_ankle_" + strNum, 18);
-            publishTransform(user, XN_SKEL_RIGHT_FOOT, frame_id, "kinect/right_foot_" + strNum, 19);
+            publishTransform(user, XN_SKEL_RIGHT_HIP,  frame_id, "kinect/left_hip_" + strNum, 16);
+            publishTransform(user, XN_SKEL_RIGHT_KNEE, frame_id, "kinect/left_knee_" + strNum, 17);
+            publishTransform(user, XN_SKEL_RIGHT_ANKLE, frame_id, "kinect/left_ankle_" + strNum, 18);
+            publishTransform(user, XN_SKEL_RIGHT_FOOT, frame_id, "kinect/left_foot_" + strNum, 19);
 
             if(publishTf && user==closestUserId) {
                 tf_pub_.publish(tf_msg_);
