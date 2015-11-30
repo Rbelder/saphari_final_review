@@ -71,7 +71,7 @@ catkin_package(
 include_directories(${PROJECT_SOURCE_DIR}/include ${catkin_INCLUDE_DIRS})
 
 execute_process(COMMAND find ${PROJECT_SOURCE_DIR} -type f OUTPUT_VARIABLE found_files)
-string(REPLACE "\n" ";" found_files_list ${found_files})
+# string(REPLACE "\n" ";" found_files_list ${found_files})
 add_custom_target(${PROJECT_NAME}_additional_files SOURCES ${found_files_list})
 
 add_definitions(-DDATA_PATH="${PROJECT_SOURCE_DIR}/data/")

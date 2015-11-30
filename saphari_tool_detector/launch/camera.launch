@@ -1,8 +1,9 @@
 <launch>
   <!-- Serial number of the camera to use
-  Uni-Bremen:   <arg name="camera_serial" default="15296932" />
-  DLR:          <arg name="camera_serial" default="12351127" />
-  DLR BlackFly: <arg name="camera_serial" default="15360637" />
+  Uni-Bremen: <arg name="camera_serial" default="15296932" />
+  Uni-Bremen: <arg name="camera_serial" default="15296934" />
+  DLR-BlackFly: <arg name="camera_serial" default="15360637" />
+  DLR:        <arg name="camera_serial" default="12351127" />
   -->
   <arg name="camera_serial" default="15360637" />
 
@@ -19,10 +20,10 @@
 
     <node pkg="nodelet" type="nodelet" name="camera_nodelet"
           args="load pointgrey_camera_driver/PointGreyCameraNodelet camera_nodelet_manager" >
-      <param name="frame_id" value="optical_frame" />
+      <param name="frame_id" value="wrist_opticial_frame" />
       <param name="serial" value="$(arg camera_serial)" />
 
-      <param name="frame_rate" value="10" />
+      <param name="frame_rate" value="2" />
 
       <param name="camera_info_url" if="$(arg calibrated)"
              value="package://saphari_tool_detector/calib/calib_$(arg camera_serial).yaml" />
@@ -30,7 +31,7 @@
 
     <node pkg="nodelet" type="nodelet" name="image_proc_debayer"
           args="load image_proc/debayer camera_nodelet_manager">
-      <param name="debayer" value="2" />
+      <param name="debayer" value="3" />
     </node>
 
     <!-- Monochrome rectified image -->
